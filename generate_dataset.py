@@ -1,6 +1,9 @@
 import argparse
 import numpy as np
-import PIL
+import PIL.Image as Image
+from PIL import ImageDraw
+import random
+import os
 
 """
 Script to generate simple images for a synthetic dataset for testing categorization techniques with deep CNNs
@@ -24,56 +27,99 @@ def percentage_float(x):
     """
     x = float(x)
     if x < 0.0 or x > 1.0:
-        raise argparse.ArgumentTypeError("%r not in range [0.0, 1.0]"%(x,))
+        raise argparse.ArgumentTypeError("%r not in range [0.0, 1.0]" % x)
     return x
 
 
-def create_shape(shape, color, texture=None):
+def random_stats(args):
     """
-    Creates an instance of a shape with the given properties
-    :param shape: The shape to generate. "square", "circle", or "triangle"
-    :param color: The color of the shape and its texture. "red", "green", "blue", "black"
-    :param texture: The texture to apply to the shape. "solid", "striped" or None
-    :return: An image object
+    Creates reasonable random statistics to generate prototypes. Saves them in the arguments object
+    :param args: The namespace object returned by parse_args()
+    :returns: The modified namespace object with values inserted for all of the shape statistics
     """
-    pass
+    return args
 
 
-def create_circle(color):
+def create_shape_set(shape, count, prototype_color, percent_color, prototype_texture, percent_texture,
+                     directory, color_choices, texture_choices, image_size):
+    """
+    Creates and saves a set of shapes
+    :param shape: The shape to generate
+    :param count: The number of images to generate
+    :param prototype_color: The color of the prototypical shape
+    :param percent_color: The percent of shapes that are that color
+    :param prototype_texture: Ditto
+    :param percent_texture: Ditto
+    :param directory: The directory to save the images to
+    :param color_choices: List of possible colors
+    :param texture_choices: List of possible textures
+    :param image_size: The width and height of each output image
+    """
+    for x in xrange(0, count):
+        # Determine color of this particular square
+        if np.random.uniform() < percent_color:
+            color = prototype_color
+        else:
+            color = random.choice(color_choices)
+
+        # Ditto for texture
+        if np.random.uniform() < percent_texture:
+            texture = prototype_texture
+        else:
+            texture = random.choice(texture_choices)
+
+        # Create the square image object
+        if shape == "square":
+            image = create_square(color, texture, image_size)
+        elif shape == "circle":
+            image = create_circle(color, texture, image_size)
+        elif shape == "triangle":
+            image = create_triangle(color, texture, image_size)
+        else:
+            raise IOError("Shape {} incorrect".format(shape))
+        assert image == type(Image)
+
+        # Save the square image to the correct directory
+        fname = "{}/{}_{}".format(directory, shape, x)
+        with open(fname, "w") as fp:
+            image.save(fp)
+
+
+def create_circle(color, texture, image_size):
     """
     Makes a circle in the given color
     :param color: "red" "green" "blue" or "black"
     :return: Image object containing a circle
     """
-    pass
+    im = Image.new("RGB", (image_size, image_size), "white")
+    circle = ImageDraw.Draw(im)
+    top_left = (5, 5)
+    bottom_right = (image_size - 5, image_size - 5)
+    if texture == "solid":
+        circle.ellipse([top_left, bottom_right], color, color)
+    else:
+        circle.ellipse([top_left, bottom_right], color, color)
+    del circle
+    im.show()
+    return None
 
 
-def create_square(color):
+def create_square(color, texture, image_size):
     """
     Creates a square in the given color
     :param color: "red" "green" "blue" or "black"
     :return: Image object containing a square
     """
-    pass
+    return None
 
 
-def create_triangle(color):
+def create_triangle(color, texture, image_size):
     """
     Creates a triangle in the given color
     :param color: "red" "green" "blue" or "black"
     :return: Image object containing a triangle
     """
-    pass
-
-
-def apply_texture(image, texture):
-    """
-    Applies the given texture to the image
-    :param image: The image object to modify
-    :param texture: The texture to apply. "solid" or "striped"
-    :return: The modified image
-    """
-    pass
+    return None
 
 
 def run():
@@ -102,6 +148,9 @@ def run():
                         help="Script will generate sensible statistics for shapes at random. All shapes will be used."
                              " If this argument is set, the script will ignore any manual statistics that follow!",
                         action="store_true")
+    parser.add_argument("--image-size",
+                        help="Size (in pixels) of each image. Images are square so just enter one number",
+                        type=int)
 
     square_group = parser.add_argument_group("Square Statistics")
     square_group.add_argument("--square-color",
@@ -162,7 +211,34 @@ def run():
 
     args = parser.parse_args()
 
-    pass
+    # Generate stats if user did not specify them
+    if args.random_stats:
+        args = random_stats(args)
+
+    # Convert the sets to lists to make things easier later
+    color_choices = list(color_choices)
+    texture_choices = list(texture_choices)
+
+    # Set up the directory structure
+    directory = args.output_directory + "/" + args.dataset_name
+    try:
+        os.makedirs(directory)
+    except OSError:
+        print "Unable to create directory"
+        exit(1)
+
+    # Make some squares
+    #create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,
+    #                 args.square_percent_texture, directory, color_choices, texture_choices, args.image_size)
+
+    # Make some circles
+    create_shape_set("circle", args.circle_number, args.circle_color, args.circle_percent_color, args.circle_texture,
+                     args.circle_percent_texture, directory, color_choices, texture_choices, args.image_size)
+
+    # Make some triangles
+    create_shape_set("triangle", args.triangle_number, args.triangle_color, args.triangle_percent_color,
+                     args.triangle_texture, args.triangle_percent_texture,
+                     directory, color_choices, texture_choices, args.image_size)
 
 
 if __name__ == "__main__":

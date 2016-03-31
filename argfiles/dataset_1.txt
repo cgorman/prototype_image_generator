@@ -2,6 +2,8 @@
 datasets
 --dataset-name
 dataset_1
+--image-size
+256
 --square-color
 blue
 --square-percent-color

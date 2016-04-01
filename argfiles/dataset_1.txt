@@ -19,7 +19,7 @@ green
 --circle-percent-color
 0.9
 --circle-texture
-solid
+striped
 --circle-percent-texture
 0.7
 --circle-number

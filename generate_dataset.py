@@ -18,6 +18,9 @@ the properties of the non-prototypes may vary from set to set we will have to ju
 user to make things a bit easier.
 """
 
+# A kind of global variable so we only need to generate as many stripe textures as there are colors
+STRIPES = dict()
+
 
 def percentage_float(x):
     """
@@ -95,48 +98,43 @@ def draw_circle(image, color, texture):
     :param texture: "solid" "striped" or "blank"
     :return: Image object containing a circle
     """
-    # Create the image to draw on
-    circle = ImageDraw.Draw(image)
     # Images are all square so just take the width and use it
     image_size = image.size[0]
+    # Create the image to draw on
+    output_image = Image.new("RGB", (image_size, image_size), "white")
+    circle = ImageDraw.Draw(image)
 
-    """
-    Randomly place the circle on the image
-    The top left point will be placed somewhere in the image such that the circle has a diameter of at least width / 4
-    """
-    x0 = random.randint(0, (image_size - image_size / 4))
-    y0 = random.randint(0, (image_size - image_size / 4))
-
-    x1 = random.randint(x0 + image_size / 4, image_size)
-    y1 = random.randint(y0 + image_size / 4, image_size)
-
-    # Ensure the shape is an actual circle
-    diff_x = x1 - x0
-    diff_y = y1 - y0
-
-    if diff_x < diff_y:
-        x1 += diff_y - diff_x
-    elif diff_y < diff_x:
-        y1 += diff_x - diff_y
-
-    # Make sure the updated point is not outside of the image bounds. If so, shift it up and left until it's inside
-    if x1 > image_size:
-        x0 -= x1 - image_size
-        x1 -= x1 - image_size
-    if y1 > image_size:
-        y0 -= y1 - image_size
-        y1 -= y1 - image_size
-
-    top_left = (x0, y0)
-    bottom_right = (x1, y1)
+    # Draw a circle the size of the image and apply the correct texture
     if texture == "solid":
-        circle.ellipse([top_left, bottom_right], color, color)
+        circle.ellipse([(5, 5), (image_size - 5, image_size - 5)], color, color)
     else:
-        circle.ellipse([top_left, bottom_right], "white", color)
+        circle.ellipse([(5, 5), (image_size - 5, image_size - 5)], "white", color)
 
     if texture == "striped":
-        # Draw some stripes on the circle at some angle
-        angle = random.randint(0, 180)
+        # Use the circle as a mask over the stripes
+        mask = Image.new("1", (image_size, image_size), 0)  # Start with a black image
+        mask_circle = ImageDraw.Draw(mask)
+        mask_circle.ellipse([(7, 7), (image_size - 7, image_size - 7)], 1, 1)
+        del mask_circle
+        image = Image.composite(STRIPES[color], image, mask)
+
+    # Randomly scale and move the circle to a new image
+    scale_factor = random.uniform(0, 4)
+    new_diameter = int(image_size * scale_factor/4)
+    # Make sure it doesn't leave the image
+    translate_x = random.randint(new_diameter - image_size, 0)
+    translate_y = random.randint(new_diameter - image_size, 0)
+    scale_params = (
+        scale_factor, 0, 0,
+        0, scale_factor, 0
+    )
+    image = image.transform((image_size, image_size), Image.AFFINE, scale_params)
+    translate_params = (
+        1, 0, translate_x,
+        0, 1, translate_y
+    )
+    image = image.transform((image_size, image_size), Image.AFFINE, translate_params)
+    # TODO: Make the new image have a white background
     image.show()
     # Delete the drawing object because that's what the docs say to do and who cares
     del circle
@@ -263,11 +261,20 @@ def run():
 
     # Set up the directory structure
     directory = args.output_directory + "/" + args.dataset_name
+    ''' While debugging lets not do this
     try:
         os.makedirs(directory)
     except OSError:
         print "Unable to create directory"
         exit(1)
+    '''
+    for color in color_choices:
+        STRIPES[color] = Image.new("RGB", (args.image_size, args.image_size), "white")
+        stripes = ImageDraw.Draw(STRIPES[color])
+        for y in xrange(0, args.image_size, 20):
+            stripes.line([(0, y), (args.image_size, y)], fill=color, width=3)
+        del stripes
+
 
     # Make some squares
     #create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,

@@ -68,16 +68,18 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
         else:
             texture = random.choice(texture_choices)
 
+        # Create the image to draw on
+        image = Image.new("RGB", (image_size, image_size), "white")
+
         # Create the square image object
         if shape == "square":
-            image = create_square(color, texture, image_size)
+            draw_square(image, color, texture)
         elif shape == "circle":
-            image = create_circle(color, texture, image_size)
+            draw_circle(image, color, texture)
         elif shape == "triangle":
-            image = create_triangle(color, texture, image_size)
+            draw_triangle(image, color, texture)
         else:
             raise IOError("Shape {} incorrect".format(shape))
-        assert image == type(Image)
 
         # Save the square image to the correct directory
         fname = "{}/{}_{}".format(directory, shape, x)
@@ -85,38 +87,49 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
             image.save(fp)
 
 
-def create_circle(color, texture, image_size):
+def draw_circle(image, color, texture):
     """
-    Makes a circle in the given color
+    Makes a circle in the given color with the given texture applied to it
+    :param image: The image object to draw on
     :param color: "red" "green" "blue" or "black"
+    :param texture: "solid" "striped" or "blank"
     :return: Image object containing a circle
     """
-    im = Image.new("RGB", (image_size, image_size), "white")
-    circle = ImageDraw.Draw(im)
+    # Create the image to draw on
+    circle = ImageDraw.Draw(image)
+    # Images are all square so just take the width and use it
+    image_size = image.size[0]
     top_left = (5, 5)
     bottom_right = (image_size - 5, image_size - 5)
     if texture == "solid":
         circle.ellipse([top_left, bottom_right], color, color)
     else:
         circle.ellipse([top_left, bottom_right], color, color)
+
+    if texture == "striped":
+        # Draw some stripes on the circle at some angle
+        angle = random.randint(0, 360)
+    # Delete the drawing object because that's what the docs say to do and who cares
     del circle
-    im.show()
-    return None
 
 
-def create_square(color, texture, image_size):
+def draw_square(image, color, texture):
     """
-    Creates a square in the given color
+    Creates a square in the given color with the given texture applied to it
+    :param image: The image object to draw on
     :param color: "red" "green" "blue" or "black"
+    :param texture: "solid" "striped" or "blank"
     :return: Image object containing a square
     """
     return None
 
 
-def create_triangle(color, texture, image_size):
+def draw_triangle(image, color, texture):
     """
-    Creates a triangle in the given color
+    Creates a triangle in the given color with the given texture applied to it
+    :param image: The image object to draw on
     :param color: "red" "green" "blue" or "black"
+    :param texture: "solid" "striped" or "blank"
     :return: Image object containing a triangle
     """
     return None

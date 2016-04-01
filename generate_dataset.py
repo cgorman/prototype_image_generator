@@ -99,16 +99,45 @@ def draw_circle(image, color, texture):
     circle = ImageDraw.Draw(image)
     # Images are all square so just take the width and use it
     image_size = image.size[0]
-    top_left = (5, 5)
-    bottom_right = (image_size - 5, image_size - 5)
+
+    """
+    Randomly place the circle on the image
+    The top left point will be placed somewhere in the image such that the circle has a diameter of at least width / 4
+    """
+    x0 = random.randint(0, (image_size - image_size / 4))
+    y0 = random.randint(0, (image_size - image_size / 4))
+
+    x1 = random.randint(x0 + image_size / 4, image_size)
+    y1 = random.randint(y0 + image_size / 4, image_size)
+
+    # Ensure the shape is an actual circle
+    diff_x = x1 - x0
+    diff_y = y1 - y0
+
+    if diff_x < diff_y:
+        x1 += diff_y - diff_x
+    elif diff_y < diff_x:
+        y1 += diff_x - diff_y
+
+    # Make sure the updated point is not outside of the image bounds. If so, shift it up and left until it's inside
+    if x1 > image_size:
+        x0 -= x1 - image_size
+        x1 -= x1 - image_size
+    if y1 > image_size:
+        y0 -= y1 - image_size
+        y1 -= y1 - image_size
+
+    top_left = (x0, y0)
+    bottom_right = (x1, y1)
     if texture == "solid":
         circle.ellipse([top_left, bottom_right], color, color)
     else:
-        circle.ellipse([top_left, bottom_right], color, color)
+        circle.ellipse([top_left, bottom_right], "white", color)
 
     if texture == "striped":
         # Draw some stripes on the circle at some angle
-        angle = random.randint(0, 360)
+        angle = random.randint(0, 180)
+    image.show()
     # Delete the drawing object because that's what the docs say to do and who cares
     del circle
 

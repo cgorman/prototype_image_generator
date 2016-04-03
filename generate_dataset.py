@@ -111,12 +111,19 @@ def draw_circle(image, color, texture):
         circle.ellipse([(5, 5), (image_size - 5, image_size - 5)], "white", color)
 
     if texture == "striped":
+        # Rotate the stripe image a random amount and crop it down to the correct size
+        stripes_size = image_size * 2
+        angle = random.randint(0, 180)
+        tmpimg = STRIPES[color].rotate(angle)
+        # Make sure we are centered on the image so we don't get any of the rotation artifacts
+        tmpimg = tmpimg.crop((stripes_size/4, stripes_size/4,
+                              stripes_size - stripes_size/4, stripes_size - stripes_size/4))
         # Use the circle as a mask over the stripes
         mask = Image.new("1", (image_size, image_size), 0)  # Start with a black image
         mask_circle = ImageDraw.Draw(mask)
         mask_circle.ellipse([(7, 7), (image_size - 7, image_size - 7)], 1, 1)
         del mask_circle
-        image = Image.composite(STRIPES[color], image, mask)
+        image = Image.composite(tmpimg, image, mask)
 
     # Delete the drawing object because that's what the docs say to do and who cares
     del circle
@@ -151,7 +158,6 @@ def draw_circle(image, color, texture):
     del mask_box
     # Apply the mask to the circle
     output_image = Image.composite(image, output_image, mask)
-    output_image.show()
 
     return output_image
 
@@ -284,11 +290,13 @@ def run():
         print "Unable to create directory"
         exit(1)
     '''
+
+    # Create the stripe images twice the size so we can rotate them without issue
     for color in color_choices:
-        STRIPES[color] = Image.new("RGB", (args.image_size, args.image_size), "white")
+        STRIPES[color] = Image.new("RGB", (args.image_size * 2, args.image_size * 2), "white")
         stripes = ImageDraw.Draw(STRIPES[color])
-        for y in xrange(0, args.image_size, 20):
-            stripes.line([(0, y), (args.image_size, y)], fill=color, width=3)
+        for y in xrange(0, args.image_size * 2, 20):
+            stripes.line([(0, y), (args.image_size * 2, y)], fill=color, width=3)
         del stripes
 
 

@@ -76,11 +76,11 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
 
         # Create the square image object
         if shape == "square":
-            draw_square(image, color, texture)
+            image = draw_square(image, color, texture)
         elif shape == "circle":
-            draw_circle(image, color, texture)
+            image = draw_circle(image, color, texture)
         elif shape == "triangle":
-            draw_triangle(image, color, texture)
+            image = draw_triangle(image, color, texture)
         else:
             raise IOError("Shape {} incorrect".format(shape))
 
@@ -118,26 +118,42 @@ def draw_circle(image, color, texture):
         del mask_circle
         image = Image.composite(STRIPES[color], image, mask)
 
+    # Delete the drawing object because that's what the docs say to do and who cares
+    del circle
     # Randomly scale and move the circle to a new image
     scale_factor = random.uniform(0, 4)
-    new_diameter = int(image_size * scale_factor/4)
-    # Make sure it doesn't leave the image
-    translate_x = random.randint(new_diameter - image_size, 0)
-    translate_y = random.randint(new_diameter - image_size, 0)
     scale_params = (
         scale_factor, 0, 0,
         0, scale_factor, 0
     )
     image = image.transform((image_size, image_size), Image.AFFINE, scale_params)
+
+    # Get the bounding box of the newly transformed circle
+    box = image.getbbox()
+    new_diameter = box[2] - box[0]
+    # Use the bounding box to determine where the circle is allowed to be translated to
+    translate_x = random.randint(new_diameter - image_size, 0)
+    translate_y = random.randint(new_diameter - image_size, 0)
     translate_params = (
         1, 0, translate_x,
         0, 1, translate_y
     )
     image = image.transform((image_size, image_size), Image.AFFINE, translate_params)
-    # TODO: Make the new image have a white background
-    image.show()
-    # Delete the drawing object because that's what the docs say to do and who cares
-    del circle
+
+    # Give the image a white background
+
+    # Get the new bounding box of the newly transformed circle
+    box = image.getbbox()
+    # Create a new mask using the bounding box
+    mask = Image.new("1", (image_size, image_size), 0)
+    mask_box = ImageDraw.Draw(mask)
+    mask_box.rectangle(box, 1, 0)
+    del mask_box
+    # Apply the mask to the circle
+    output_image = Image.composite(image, output_image, mask)
+    output_image.show()
+
+    return output_image
 
 
 def draw_square(image, color, texture):

@@ -15,7 +15,7 @@ striped
 --square-number
 1000
 --circle-color
-green
+red
 --circle-percent-color
 0.9
 --circle-texture

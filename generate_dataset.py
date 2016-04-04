@@ -85,7 +85,7 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
             raise IOError("Shape {} incorrect".format(shape))
 
         # Save the square image to the correct directory
-        fname = "{}/{}_{}".format(directory, shape, x)
+        fname = "{}/{}_{}.png".format(directory, shape, x)
         with open(fname, "w") as fp:
             image.save(fp)
 
@@ -416,13 +416,11 @@ def run():
 
     # Set up the directory structure
     directory = args.output_directory + "/" + args.dataset_name
-    ''' While debugging lets not do this
     try:
         os.makedirs(directory)
     except OSError:
         print "Unable to create directory"
         exit(1)
-    '''
 
     # Create the stripe images twice the size so we can rotate them without issue
     for color in color_choices:
@@ -432,14 +430,13 @@ def run():
             stripes.line([(0, y), (args.image_size * 2, y)], fill=color, width=3)
         del stripes
 
-
     # Make some squares
-    #create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,
-    #                 args.square_percent_texture, directory, color_choices, texture_choices, args.image_size)
+    create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,
+                     args.square_percent_texture, directory, color_choices, texture_choices, args.image_size)
 
     # Make some circles
-    #create_shape_set("circle", args.circle_number, args.circle_color, args.circle_percent_color, args.circle_texture,
-    #                 args.circle_percent_texture, directory, color_choices, texture_choices, args.image_size)
+    create_shape_set("circle", args.circle_number, args.circle_color, args.circle_percent_color, args.circle_texture,
+                     args.circle_percent_texture, directory, color_choices, texture_choices, args.image_size)
 
     # Make some triangles
     create_shape_set("triangle", args.triangle_number, args.triangle_color, args.triangle_percent_color,

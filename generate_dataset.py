@@ -128,7 +128,7 @@ def draw_circle(image, color, texture):
     # Delete the drawing object because that's what the docs say to do and who cares
     del circle
     # Randomly scale and move the circle to a new image
-    scale_factor = random.uniform(0, 4)
+    scale_factor = random.uniform(1, 4)
     scale_params = (
         scale_factor, 0, 0,
         0, scale_factor, 0
@@ -170,7 +170,71 @@ def draw_square(image, color, texture):
     :param texture: "solid" "striped" or "blank"
     :return: Image object containing a square
     """
-    return None
+    # Images are all square so just take the width and use it
+    image_size = image.size[0]
+    # Create the image to draw on
+    output_image = Image.new("RGB", (image_size, image_size), "white")
+    square = ImageDraw.Draw(image)
+
+    # Draw a square roughly the size of the image and apply the correct texture
+    if texture == "solid":
+        square.rectangle([(5, 5), (image_size - 5, image_size - 5)], color, color)
+    else:
+        for i in xrange(0, 5):
+            # Draw multiple rectangles to get the correct line thickness. Ugh.
+            square.rectangle([(10 + i, 10 + i), (image_size - 10 - i, image_size - 10 - i)], "white", color)
+
+    if texture == "striped":
+        # Rotate the stripe image a random amount and crop it down to the correct size
+        stripes_size = image_size * 2
+        angle = random.randint(0, 180)
+        tmpimg = STRIPES[color].rotate(angle)
+        # Make sure we are centered on the image so we don't get any of the rotation artifacts
+        tmpimg = tmpimg.crop((stripes_size / 4, stripes_size / 4,
+                              stripes_size - stripes_size / 4, stripes_size - stripes_size / 4))
+        # Use the circle as a mask over the stripes
+        mask = Image.new("1", (image_size, image_size), 0)  # Start with a black image
+        mask_square = ImageDraw.Draw(mask)
+        mask_square.rectangle([(15, 15), (image_size - 15, image_size - 15)], 1, 1)
+        del mask_square
+        image = Image.composite(tmpimg, image, mask)
+
+    # Delete the drawing object because that's what the docs say to do and who cares
+    del square
+    # Randomly scale and move the square to a new image
+    scale_factor = random.uniform(1, 4)
+    scale_params = (
+        scale_factor, 0, 0,
+        0, scale_factor, 0
+    )
+    image = image.transform((image_size, image_size), Image.AFFINE, scale_params)
+
+    # Get the bounding box of the newly transformed square
+    box = image.getbbox()
+    new_width = box[2] - box[0]
+    # Use the bounding box to determine where the circle is allowed to be translated to
+    translate_x = random.randint(new_width - image_size, 0)
+    translate_y = random.randint(new_width - image_size, 0)
+    translate_params = (
+        1, 0, translate_x,
+        0, 1, translate_y
+    )
+    image = image.transform((image_size, image_size), Image.AFFINE, translate_params)
+
+    # Give the image a white background
+
+    # Get the new bounding box of the newly transformed square
+    box = image.getbbox()
+    box = (box[0] + 1, box[1] + 1, box[2] - 1, box[3] - 1)
+    # Create a new mask using the bounding box
+    mask = Image.new("1", (image_size, image_size), 0)
+    mask_box = ImageDraw.Draw(mask)
+    mask_box.rectangle(box, 1, 0)
+    del mask_box
+    # Apply the mask to the square
+    output_image = Image.composite(image, output_image, mask)
+    output_image.show()
+    return output_image
 
 
 def draw_triangle(image, color, texture):
@@ -301,8 +365,8 @@ def run():
 
 
     # Make some squares
-    #create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,
-    #                 args.square_percent_texture, directory, color_choices, texture_choices, args.image_size)
+    create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,
+                     args.square_percent_texture, directory, color_choices, texture_choices, args.image_size)
 
     # Make some circles
     create_shape_set("circle", args.circle_number, args.circle_color, args.circle_percent_color, args.circle_texture,

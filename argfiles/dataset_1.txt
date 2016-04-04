@@ -29,7 +29,7 @@ green
 --triangle-percent-color
 0.75
 --triangle-texture
-blank
+striped
 --triangle-percent-texture
 0.9
 --triangle-number

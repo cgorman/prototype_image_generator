@@ -39,6 +39,7 @@ def random_stats(args):
     Creates reasonable random statistics to generate prototypes. Saves them in the arguments object
     :param args: The namespace object returned by parse_args()
     :returns: The modified namespace object with values inserted for all of the shape statistics
+
     """
     return args
 

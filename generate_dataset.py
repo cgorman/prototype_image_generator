@@ -85,8 +85,8 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
         else:
             raise IOError("Shape {} incorrect".format(shape))
 
-        # Save the square image to the correct directory
-        fname = "{}/{}_{}.png".format(directory, shape, x)
+        # Save the image, dir/shape_number_color_texture.png, zero pad the outputs
+        fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.png".format(directory, shape, x, len(str(count - 1)), color, texture)
         with open(fname, "w") as fp:
             image.save(fp)
 

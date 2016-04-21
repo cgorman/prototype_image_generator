@@ -44,7 +44,7 @@ def random_stats(args):
     return args
 
 
-def create_shape_set(shape, count, prototype_color, percent_color, prototype_texture, percent_texture,
+def create_shape_set(shape, filetype, count, prototype_color, percent_color, prototype_texture, percent_texture,
                      directory, color_choices, texture_choices, image_size, subfolder_labels):
     """
     Creates and saves a set of shapes
@@ -90,11 +90,13 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
             newdir = "{0}/{1}/{2}/{3}/".format(directory, shape, color, texture)
             if not os.path.exists(newdir):
                 os.makedirs(newdir)
-            # Save image as dir/shape/color/texture/number.png
-            fname = "{0}/{1:0{2}d}.png".format(newdir, x, len(str(count - 1)))
+            # Save image as dir/shape/color/texture/number.{png,jpg}
+            fname = "{0}/{1:0{2}d}.{3}".format(newdir, x, len(str(count - 1)), filetype)
         else:
             # Save the image, dir/shape_number_color_texture.png, zero pad the outputs
-            fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.png".format(directory, shape, x, len(str(count - 1)), color, texture)
+            fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.{6}".format(directory,
+                                                           shape, x, len(str(count - 1)),
+                                                           color, texture, filetype)
         with open(fname, "w") as fp:
             image.save(fp)
 
@@ -352,6 +354,10 @@ def run():
                         action="store_true",
                         help="Outputs the final images using subfolders as labels rather than image names. E.g. a "
                              "red striped square will be in {output-directory}/{dataset-name}/square/red/striped/")
+    parser.add_argument("--filetype",
+                        help="What to save the output images as",
+                        default="png",
+                        choices=["jpg", "png"])
     parser.add_argument("--random-stats",
                         help="Script will generate sensible statistics for shapes at random. All shapes will be used."
                              " If this argument is set, the script will ignore any manual statistics that follow!",
@@ -444,17 +450,17 @@ def run():
         del stripes
 
     # Make some squares
-    create_shape_set("square", args.square_number, args.square_color,
+    create_shape_set("square", args.filetype, args.square_number, args.square_color,
                      args.square_percent_color, args.square_texture, args.square_percent_texture,
                      directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
 
     # Make some circles
-    create_shape_set("circle", args.circle_number, args.circle_color,
+    create_shape_set("circle", args.filetype, args.circle_number, args.circle_color,
                      args.circle_percent_color, args.circle_texture, args.circle_percent_texture,
                      directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
 
     # Make some triangles
-    create_shape_set("triangle", args.triangle_number, args.triangle_color,
+    create_shape_set("triangle", args.filetype, args.triangle_number, args.triangle_color,
                      args.triangle_percent_color, args.triangle_texture, args.triangle_percent_texture,
                      directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
 

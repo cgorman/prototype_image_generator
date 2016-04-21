@@ -3,6 +3,8 @@ datasets
 --dataset-name
 dataset_1.5
 --subfolder-labels
+--filetype
+jpg
 --image-size
 256
 --square-color

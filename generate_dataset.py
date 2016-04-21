@@ -45,7 +45,7 @@ def random_stats(args):
 
 
 def create_shape_set(shape, count, prototype_color, percent_color, prototype_texture, percent_texture,
-                     directory, color_choices, texture_choices, image_size):
+                     directory, color_choices, texture_choices, image_size, subfolder_labels):
     """
     Creates and saves a set of shapes
     :param shape: The shape to generate
@@ -58,6 +58,7 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
     :param color_choices: List of possible colors
     :param texture_choices: List of possible textures
     :param image_size: The width and height of each output image
+    :param subfolder_labels: If `True`, output labels are determined by directory structure rather than filename
     """
     for x in xrange(0, count):
         # Determine color of this particular square
@@ -85,8 +86,15 @@ def create_shape_set(shape, count, prototype_color, percent_color, prototype_tex
         else:
             raise IOError("Shape {} incorrect".format(shape))
 
-        # Save the image, dir/shape_number_color_texture.png, zero pad the outputs
-        fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.png".format(directory, shape, x, len(str(count - 1)), color, texture)
+        if subfolder_labels:
+            newdir = "{0}/{1}/{2}/{3}/".format(directory, shape, color, texture)
+            if not os.path.exists(newdir):
+                os.makedirs(newdir)
+            # Save image as dir/shape/color/texture/number.png
+            fname = "{0}/{1:0{2}d}.png".format(newdir, x, len(str(count - 1)))
+        else:
+            # Save the image, dir/shape_number_color_texture.png, zero pad the outputs
+            fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.png".format(directory, shape, x, len(str(count - 1)), color, texture)
         with open(fname, "w") as fp:
             image.save(fp)
 
@@ -340,6 +348,10 @@ def run():
                         help="The directory to save the dataset to.")
     parser.add_argument("--dataset-name",
                         help="Colloquial name for this dataset. Will be the name of the final output directory.")
+    parser.add_argument("--subfolder-labels",
+                        action="store_true",
+                        help="Outputs the final images using subfolders as labels rather than image names. E.g. a "
+                             "red striped square will be in {output-directory}/{dataset-name}/square/red/striped/")
     parser.add_argument("--random-stats",
                         help="Script will generate sensible statistics for shapes at random. All shapes will be used."
                              " If this argument is set, the script will ignore any manual statistics that follow!",
@@ -432,17 +444,19 @@ def run():
         del stripes
 
     # Make some squares
-    create_shape_set("square", args.square_number, args.square_color, args.square_percent_color, args.square_texture,
-                     args.square_percent_texture, directory, color_choices, texture_choices, args.image_size)
+    create_shape_set("square", args.square_number, args.square_color,
+                     args.square_percent_color, args.square_texture, args.square_percent_texture,
+                     directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
 
     # Make some circles
-    create_shape_set("circle", args.circle_number, args.circle_color, args.circle_percent_color, args.circle_texture,
-                     args.circle_percent_texture, directory, color_choices, texture_choices, args.image_size)
+    create_shape_set("circle", args.circle_number, args.circle_color,
+                     args.circle_percent_color, args.circle_texture, args.circle_percent_texture,
+                     directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
 
     # Make some triangles
-    create_shape_set("triangle", args.triangle_number, args.triangle_color, args.triangle_percent_color,
-                     args.triangle_texture, args.triangle_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size)
+    create_shape_set("triangle", args.triangle_number, args.triangle_color,
+                     args.triangle_percent_color, args.triangle_texture, args.triangle_percent_texture,
+                     directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
 
 
 if __name__ == "__main__":

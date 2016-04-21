@@ -4,7 +4,7 @@ Script to generate image datasets which have statistical properties associated w
 
 N.B. the textures and colors are independent, so a token object can be the prototypical color without being the prototypical texture, even if they have the same probability (e.g. 80% of squares are black and 80% are striped)
 
-I tried commenting everything but the methods to generate images are big goofy so I apologize for that. 
+I tried commenting everything but the methods to generate images are big and goofy so I apologize for that.
 
 **FYI: Randomly generated stats have not been implemented yet**
 
@@ -13,10 +13,12 @@ Script accepts arguments from a file. Simply separate each option with its input
 
 I recommend gzipping the output directory once you verify that it is what you wanted
 
+The argument for subfolder lables is in place because Google's inception v3 training for TensorFlow expects that as input and it's easier to just have that as an option instead of rewriting their code
+
 ```
 python generate_dataset.py [-h] [--output-directory OUTPUT_DIRECTORY]
-                           [--dataset-name DATASET_NAME] [--random-stats]
-                           [--image-size IMAGE_SIZE]
+                           [--dataset-name DATASET_NAME] [--subfolder-labels]
+                           [--random-stats] [--image-size IMAGE_SIZE]
                            [--square-color {blue,green,black,red}]
                            [--square-percent-color SQUARE_PERCENT_COLOR]
                            [--square-texture {solid,striped,blank}]
@@ -46,6 +48,10 @@ optional arguments:
   --dataset-name DATASET_NAME
                         Colloquial name for this dataset. Will be the name of
                         the final output directory.
+  --subfolder-labels    Outputs the final images using subfolders as labels
+                        rather than image names. E.g. a red striped square
+                        will be in {output-directory}/{dataset-
+                        name}/square/red/striped/
   --random-stats        Script will generate sensible statistics for shapes at
                         random. All shapes will be used. If this argument is
                         set, the script will ignore any manual statistics that

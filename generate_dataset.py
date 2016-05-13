@@ -5,18 +5,6 @@ from PIL import ImageDraw
 import random
 import os
 
-"""
-Script to generate simple images for a synthetic dataset for testing categorization techniques with deep CNNs
-User will provide parameters to generate the image files such that they represent prototypical token objects and
-unusual token objects. The user can manually enter these parameters or the script can choose them somewhat randomly.
-The final output will be a set of N images of shapes which have statistical similarities with each other. For example
-75% of circles are green, 10% are red, and 15% are blue, and maybe 70% of circles are solid, 20% are striped, and
-5% are blank or something. Important to note that the color and texture are conditionally independent.
-
-The output will be placed into a directory with a text file listing the statistical properties of the prototypes. Since
-the properties of the non-prototypes may vary from set to set we will have to just ask for a name for the set from the
-user to make things a bit easier.
-"""
 
 # A kind of global variable so we only need to generate as many stripe textures as there are colors
 STRIPES = dict()
@@ -45,7 +33,7 @@ def random_stats(args):
 
 
 def create_shape_set(shape, filetype, count, prototype_color, percent_color, prototype_texture, percent_texture,
-                     directory, color_choices, texture_choices, image_size, validation_set, traindir, valdir):
+                     color_choices, texture_choices, image_size, validation_set, traindir, valdir):
     """
     Creates and saves a set of shapes
     :param shape: The shape to generate
@@ -55,11 +43,12 @@ def create_shape_set(shape, filetype, count, prototype_color, percent_color, pro
     :param percent_color: The percent of shapes that are that color
     :param prototype_texture: Ditto
     :param percent_texture: Ditto
-    :param directory: The directory to save the images to
     :param color_choices: List of possible colors
     :param texture_choices: List of possible textures
     :param image_size: The width and height of each output image
     :param validation_set: The percentage of images to save into the validation folder
+    :param traindir: The directory to save training data to
+    :param valdir: The directory to save validation data to
     """
     for x in xrange(0, count):
         # Determine color of this particular square
@@ -103,7 +92,8 @@ def create_shape_set(shape, filetype, count, prototype_color, percent_color, pro
 def split_validation_set(traindir, valdir, validation_num):
     """
     Move some number of files from the training directory into a newly created validation directory
-    :param directory: Root directory for the dataset. E.g. directory/training and directory/validation
+    :param traindir: The directory the training data was saved to. Images will be moved from here to..
+    :param valdir: ..here.
     :param validation_num: The number of files to move
     """
     # Get a list of all the files we just created with their full paths
@@ -475,20 +465,17 @@ def run():
     # Make some squares
     create_shape_set("square", args.filetype, args.square_number, args.square_color,
                      args.square_percent_color, args.square_texture, args.square_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size,
-                     args.validation_split, traindir, valdir)
+                     color_choices, texture_choices, args.image_size, args.validation_split, traindir, valdir)
 
     # Make some circles
     create_shape_set("circle", args.filetype, args.circle_number, args.circle_color,
                      args.circle_percent_color, args.circle_texture, args.circle_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size,
-                     args.validation_split, traindir, valdir)
+                     color_choices, texture_choices, args.image_size, args.validation_split, traindir, valdir)
 
     # Make some triangles
     create_shape_set("triangle", args.filetype, args.triangle_number, args.triangle_color,
                      args.triangle_percent_color, args.triangle_texture, args.triangle_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size,
-                     args.validation_split, traindir, valdir)
+                     color_choices, texture_choices, args.image_size, args.validation_split, traindir, valdir)
 
 
 if __name__ == "__main__":

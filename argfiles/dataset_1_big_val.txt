@@ -1,7 +1,7 @@
 --output-directory
 datasets
 --dataset-name
-dataset_1
+dataset_1_big_val
 --image-size
 256
 --validation-split

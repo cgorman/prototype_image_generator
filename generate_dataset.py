@@ -45,10 +45,11 @@ def random_stats(args):
 
 
 def create_shape_set(shape, filetype, count, prototype_color, percent_color, prototype_texture, percent_texture,
-                     directory, color_choices, texture_choices, image_size, subfolder_labels):
+                     directory, color_choices, texture_choices, image_size, validation_set, traindir, valdir):
     """
     Creates and saves a set of shapes
     :param shape: The shape to generate
+    :param filetype: Either png or jpg
     :param count: The number of images to generate
     :param prototype_color: The color of the prototypical shape
     :param percent_color: The percent of shapes that are that color
@@ -58,7 +59,7 @@ def create_shape_set(shape, filetype, count, prototype_color, percent_color, pro
     :param color_choices: List of possible colors
     :param texture_choices: List of possible textures
     :param image_size: The width and height of each output image
-    :param subfolder_labels: If `True`, output labels are determined by directory structure rather than filename
+    :param validation_set: The percentage of images to save into the validation folder
     """
     for x in xrange(0, count):
         # Determine color of this particular square
@@ -86,19 +87,34 @@ def create_shape_set(shape, filetype, count, prototype_color, percent_color, pro
         else:
             raise IOError("Shape {} incorrect".format(shape))
 
-        if subfolder_labels:
-            newdir = "{0}/{1}/{2}/{3}/".format(directory, shape, color, texture)
-            if not os.path.exists(newdir):
-                os.makedirs(newdir)
-            # Save image as dir/shape/color/texture/number.{png,jpg}
-            fname = "{0}/{1:0{2}d}.{3}".format(newdir, x, len(str(count - 1)), filetype)
-        else:
-            # Save the image, dir/shape_number_color_texture.png, zero pad the outputs
-            fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.{6}".format(directory,
-                                                           shape, x, len(str(count - 1)),
-                                                           color, texture, filetype)
+        # Save the image, dir/training/shape_number_color_texture.png, zero pad the outputs
+        fname = "{0}/{1}_{2:0{3}d}_{4}_{5}.{6}".format(traindir,
+                                                       shape, x, len(str(count - 1)),
+                                                       color, texture, filetype)
         with open(fname, "w") as fp:
             image.save(fp)
+
+    if validation_set > 0:
+        # Take the newly saved files and put some of them into the validation directory
+        validation_num = int(count * validation_set)
+        split_validation_set(traindir, valdir, validation_num)
+
+
+def split_validation_set(traindir, valdir, validation_num):
+    """
+    Move some number of files from the training directory into a newly created validation directory
+    :param directory: Root directory for the dataset. E.g. directory/training and directory/validation
+    :param validation_num: The number of files to move
+    """
+    # Get a list of all the files we just created with their full paths
+    training_file_list = [os.path.join(traindir, f) for f in os.listdir(traindir) if f.endswith(".png")]
+    # Get the random indices to pull from the training file list
+    validation_idxs = random.sample(range(len(training_file_list)), validation_num)
+    for index in validation_idxs:
+        src = training_file_list[index]
+        filename = os.path.basename(src)
+        dest = os.path.join(valdir, filename)
+        os.rename(src, dest)
 
 
 def draw_circle(image, color, texture):
@@ -350,10 +366,6 @@ def run():
                         help="The directory to save the dataset to.")
     parser.add_argument("--dataset-name",
                         help="Colloquial name for this dataset. Will be the name of the final output directory.")
-    parser.add_argument("--subfolder-labels",
-                        action="store_true",
-                        help="Outputs the final images using subfolders as labels rather than image names. E.g. a "
-                             "red striped square will be in {output-directory}/{dataset-name}/square/red/striped/")
     parser.add_argument("--filetype",
                         help="What to save the output images as",
                         default="png",
@@ -365,6 +377,11 @@ def run():
     parser.add_argument("--image-size",
                         help="Size (in pixels) of each image. Images are square so just enter one number",
                         type=int)
+    parser.add_argument("--validation-split",
+                        help="If set, this percentage of images will be put into the validation directory. "
+                             "Value must be in range [0.0, 1.0]",
+                        type=percentage_float,
+                        default=0.0)
 
     square_group = parser.add_argument_group("Square Statistics")
     square_group.add_argument("--square-color",
@@ -434,11 +451,17 @@ def run():
     texture_choices = list(texture_choices)
 
     # Set up the directory structure
-    directory = args.output_directory + "/" + args.dataset_name
+    directory = os.path.join(args.output_directory, args.dataset_name)
+    traindir = os.path.join(directory, "training")
+    valdir = None
+    if args.validation_split > 0:
+        valdir = os.path.join(directory, "validation")
     try:
         os.makedirs(directory)
+        os.makedirs(traindir)
+        os.makedirs(valdir)
     except OSError:
-        print "Unable to create directory"
+        print "Unable to create directories"
         exit(1)
 
     # Create the stripe images twice the size so we can rotate them without issue
@@ -452,17 +475,20 @@ def run():
     # Make some squares
     create_shape_set("square", args.filetype, args.square_number, args.square_color,
                      args.square_percent_color, args.square_texture, args.square_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
+                     directory, color_choices, texture_choices, args.image_size,
+                     args.validation_split, traindir, valdir)
 
     # Make some circles
     create_shape_set("circle", args.filetype, args.circle_number, args.circle_color,
                      args.circle_percent_color, args.circle_texture, args.circle_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
+                     directory, color_choices, texture_choices, args.image_size,
+                     args.validation_split, traindir, valdir)
 
     # Make some triangles
     create_shape_set("triangle", args.filetype, args.triangle_number, args.triangle_color,
                      args.triangle_percent_color, args.triangle_texture, args.triangle_percent_texture,
-                     directory, color_choices, texture_choices, args.image_size, args.subfolder_labels)
+                     directory, color_choices, texture_choices, args.image_size,
+                     args.validation_split, traindir, valdir)
 
 
 if __name__ == "__main__":

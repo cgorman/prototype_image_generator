@@ -1,6 +1,6 @@
 # Prototype Image Generator
 
-Script to generate image datasets which have statistical properties associated with prototypical individuals. The script generates a set of circles, triangles, and squares which have the properties of color and texture. For example, the prototypical circle may be green and solid or green and striped.
+Script to generate image datasets which have statistical properties associated with prototypical individuals. The script generates a set of circles, triangles, and squares which have the properties of color and texture. For example, the prototypical circle may be green and solid or green and striped. Script also handles training and validation splitting. The output directory will have a training folder and, if you supply the argument, a validation folder.
 
 N.B. the textures and colors are independent, so a token object can be the prototypical color without being the prototypical texture, even if they have the same probability (e.g. 80% of squares are black and 80% are striped)
 
@@ -16,9 +16,11 @@ I recommend gzipping the output directory once you verify that it is what you wa
 The argument for subfolder lables is in place because Google's inception v3 training for TensorFlow expects that as input and it's easier to just have that as an option instead of rewriting their code
 
 ```
-python generate_dataset.py [-h] [--output-directory OUTPUT_DIRECTORY]
-                           [--dataset-name DATASET_NAME] [--subfolder-labels]
-                           [--random-stats] [--image-size IMAGE_SIZE]
+usage: generate_dataset.py [-h] [--output-directory OUTPUT_DIRECTORY]
+                           [--dataset-name DATASET_NAME]
+                           [--filetype {jpg,png}] [--random-stats]
+                           [--image-size IMAGE_SIZE]
+                           [--validation-split VALIDATION_SPLIT]
                            [--square-color {blue,green,black,red}]
                            [--square-percent-color SQUARE_PERCENT_COLOR]
                            [--square-texture {solid,striped,blank}]
@@ -48,10 +50,7 @@ optional arguments:
   --dataset-name DATASET_NAME
                         Colloquial name for this dataset. Will be the name of
                         the final output directory.
-  --subfolder-labels    Outputs the final images using subfolders as labels
-                        rather than image names. E.g. a red striped square
-                        will be in {output-directory}/{dataset-
-                        name}/square/red/striped/
+  --filetype {jpg,png}  What to save the output images as
   --random-stats        Script will generate sensible statistics for shapes at
                         random. All shapes will be used. If this argument is
                         set, the script will ignore any manual statistics that
@@ -59,6 +58,10 @@ optional arguments:
   --image-size IMAGE_SIZE
                         Size (in pixels) of each image. Images are square so
                         just enter one number
+  --validation-split VALIDATION_SPLIT
+                        If set, this percentage of images will be put into the
+                        validation directory. Value must be in range [0.0,
+                        1.0]
 
 Square Statistics:
   --square-color {blue,green,black,red}
@@ -107,4 +110,6 @@ Triangle Statistics:
                         range [0.0, 1.0]
   --triangle-number TRIANGLE_NUMBER
                         The number of triangles we should generate as output
+
+(Again, you may want to use a file instead)
 ```

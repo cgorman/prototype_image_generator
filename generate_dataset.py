@@ -451,7 +451,7 @@ def run():
         os.makedirs(traindir)
         os.makedirs(valdir)
     except OSError:
-        print "Unable to create directories"
+        print("Unable to create directories")
         exit(1)
 
     # Create the stripe images twice the size so we can rotate them without issue
